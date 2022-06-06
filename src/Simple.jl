@@ -23,11 +23,7 @@ using Cyton
 import Cyton: shouldDie, shouldDivide, inherit, step
 
 using DataFrames
-using Gadfly: plot, layer, cm, Gadfly, Theme, Guide, Geom, Col
 
-# Gadfly defaults
-Gadfly.set_default_plot_size(10cm, 10cm)
-Gadfly.push_theme(Theme(background_color="white"))
 
 # Parameters from the Cyton2 paper
 λ_firstDivision = LogNormalParms(log(39.89), 0.28)
@@ -50,7 +46,7 @@ function DeathTimer(r::DistributionParmSet)
   DeathTimer(draw(r))
 end
 inherit(timer::DeathTimer, ::Time) = timer
-function step(death::DeathTimer, time::Time, Δt::Duration)
+function step(death::DeathTimer, time::Time, Δt::Duration)::Union{CellEvent, Nothing}
   if time > death.timeToDeath
     return Death()
   else
@@ -119,10 +115,8 @@ function runModel(model::CellPopulation, runDuration::Time)
     end
   end
 
-  vars = [:total :gen0 :gen1 :gen2 :gen3 :gen4 :gen5 :gen6 :gen7 :gen8 :genOther]
-  h = plot(counts, x=:time, y=Col.value(vars...), color=Col.index(vars...))
-  display(h)
-  println("Done at model time=$(modelTime(model))")
+  return counts
 end
+
 
 end # module Simple
