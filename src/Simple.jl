@@ -20,7 +20,7 @@ Time units are hours.
 """
 
 using Cyton
-import Cyton: shouldDie, shouldDivide, inherit, step
+import Cyton: sample, inherit, step
 
 using DataFrames
 
@@ -43,7 +43,7 @@ struct DeathTimer <: FateTimer
   timeToDeath::Time
 end
 function DeathTimer(r::DistributionParmSet)
-  DeathTimer(draw(r))
+  DeathTimer(sample(r))
 end
 inherit(timer::DeathTimer, ::Time) = timer
 function step(death::DeathTimer, time::Time, Δt::Duration)::Union{CellEvent, Nothing}
@@ -60,9 +60,9 @@ struct DivisionTimer <: FateTimer
   timeToDestiny::Time
 end
 "Constructor for fresh cells"
-DivisionTimer(division::DistributionParmSet, destiny::DistributionParmSet) = DivisionTimer(draw(division), draw(destiny))
+DivisionTimer(division::DistributionParmSet, destiny::DistributionParmSet) = DivisionTimer(sample(division), sample(destiny))
 "Constructor for daughter cells"
-DivisionTimer(r::DistributionParmSet, start::Time, destiny::Time) = DivisionTimer(draw(r) + start, destiny)
+DivisionTimer(r::DistributionParmSet, start::Time, destiny::Time) = DivisionTimer(sample(r) + start, destiny)
 
 function step(division::DivisionTimer, time::Time, Δt::Duration) 
   if time < division.timeToDestiny && time > division.timeToDivision
@@ -81,7 +81,7 @@ function cellFactory(birth::Time=0.0)
   return cell
 end
 
-function runModel(model::CellPopulation, runDuration::Time)
+function runModel(model::CytonModel, runDuration::Time)
   print("Time to run:")
   @time begin
     counts = DataFrame(time=Time[], 
@@ -102,7 +102,7 @@ function runModel(model::CellPopulation, runDuration::Time)
       step(model)
 
       local genCnts = zeros(10)
-      cells = model.cells
+      cells = keys(model.cells)
       for cell in cells
         gen = cell.generation
         if gen <= 8
